@@ -1,59 +1,61 @@
 # Time Tracker
 
-Настольное WPF-приложение для Windows, которое отслеживает рабочее время в выбранном приложении: считает активность по вводу с клавиатуры и мыши, строит почасовую статистику и ведёт историю по дням.
+[Русская версия](README.ru.md)
 
-## Возможности
+A desktop WPF application for Windows that tracks working time in a selected application: it measures activity based on keyboard and mouse input, builds hourly statistics, and keeps a day-by-day history.
 
-- **Выбор целевого окна** — кнопка «Указать окно» даёт 5 секунд, чтобы переключиться на нужное приложение; дальше трекер следит за его процессом.
-- **Учёт активного времени** — глобальные хуки ввода (клавиатура и мышь) фиксируют активность; время считается только пока пользователь работает в целевом окне.
-- **Почасовая статистика** — распределение рабочего времени и простоя по 24 часам выбранного дня.
-- **История по дням** — список дней с суммарным отработанным временем, автоматический переход на новый день.
-- **Предупреждение о неактивности** — отдельное поверх-всех-окон уведомление, если ввод давно отсутствует.
-- **Автосохранение** — конфиг и история сохраняются автоматически (в интерфейсе видно время последнего сохранения).
-- **Сброс** — обнуление счётчика текущего дня одной кнопкой.
+## Features
 
-## Стек
+- **Target window selection** — the "Specify window" button gives you 5 seconds to switch to the desired application; after that, the tracker monitors its process.
+- **Active time tracking** — global input hooks (keyboard and mouse) capture activity; time is counted only while the user is working in the target window.
+- **Hourly statistics** — distribution of working time and idle time across the 24 hours of the selected day.
+- **Day-by-day history** — a list of days with total time worked, with automatic rollover to a new day.
+- **Inactivity warning** — a separate always-on-top notification if input has been absent for a long time.
+- **Autosave** — the config and history are saved automatically (the last save time is shown in the interface).
+- **Reset** — reset the current day's counter with a single button.
+
+## Tech Stack
 
 - C# / .NET 8 (`net8.0-windows`)
-- WPF + Windows Forms (глобальные хуки ввода через Win32 API)
+- WPF + Windows Forms (global input hooks via Win32 API)
 - MVVM (Models / ViewModels / Services / Converters)
-- `System.Text.Json` для хранения конфига и истории
+- `System.Text.Json` for storing the config and history
 
-## Структура проекта
+## Project Structure
 
 ```
 .
 ├── Models/                        # ActivityAction, DayHistory, DaySummary, HourlyStat
 ├── ViewModels/                    # MainViewModel, RelayCommand
 ├── Services/                      # TrackerService, InputHooks, HistoryService,
-│                                  # ConfigService, NativeMethods, ProcessHelper и др.
-├── Converters/                    # XAML-конвертеры
-├── tools/                         # IconConverter — утилита для иконки (исключена из сборки)
-├── MainWindow.xaml                # главное окно
-├── InactivityWarningWindow.xaml   # окно предупреждения о неактивности
+│                                  # ConfigService, NativeMethods, ProcessHelper and others
+├── Converters/                    # XAML converters
+├── tools/                         # IconConverter — icon utility (excluded from the build)
+├── MainWindow.xaml                # main window
+├── InactivityWarningWindow.xaml   # inactivity warning window
 └── TimeTracker.sln
 ```
 
-## Требования
+## Requirements
 
 - Windows
-- .NET 8 SDK (точная версия закреплена в `global.json`)
+- .NET 8 SDK (the exact version is pinned in `global.json`)
 
-## Сборка и запуск
+## Build and Run
 
-Через .NET CLI:
+Via the .NET CLI:
 
 ```bash
 dotnet build
 dotnet run --project TimeTracker.csproj
 ```
 
-Или откройте `TimeTracker.sln` в Visual Studio и запустите проект (F5).
+Or open `TimeTracker.sln` in Visual Studio and run the project (F5).
 
-## Где хранятся данные
+## Where Data Is Stored
 
-Конфиг (`config.json`) и история (`history.json`) сохраняются в `%LocalAppData%\TimeTracker\` и дублируются рядом с исполняемым файлом. При загрузке приоритет у данных из `%LocalAppData%`.
+The config (`config.json`) and history (`history.json`) are saved to `%LocalAppData%\TimeTracker\` and duplicated next to the executable file. On load, data from `%LocalAppData%` takes priority.
 
-## Лицензия
+## License
 
-MIT — см. [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
