@@ -14,6 +14,10 @@ A desktop WPF application for Windows that tracks working time in a selected app
 - **Autosave** — the config and history are saved automatically (the last save time is shown in the interface).
 - **Reset** — reset the current day's counter with a single button.
 
+## Screenshot
+
+![Time Tracker main window](clock.png)
+
 ## Tech Stack
 
 - C# / .NET 8 (`net8.0-windows`)
