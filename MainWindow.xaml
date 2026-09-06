@@ -3,27 +3,38 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="clr-namespace:TimeTracker.Models"
         xmlns:converters="clr-namespace:TimeTracker.Converters"
-        Title="Time Tracker" Height="700" Width="1100"
+        xmlns:local="clr-namespace:TimeTracker"
+        Title="Time Tracker" Height="750" Width="1200"
         WindowStartupLocation="CenterScreen"
-        MinWidth="900" MinHeight="550"
+        MinWidth="1000" MinHeight="600"
         Icon="clock.ico">
     <Window.Resources>
-        <converters:MinutesToHeightConverter x:Key="MinutesToHeight" MaxHeight="150" MaxMinutes="60"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityInverted" Invert="True"/>
 
-        <DataTemplate DataType="{x:Type models:HourlyStat}">
-            <Grid Width="28" Margin="1,0">
+        <!-- Столбец почасового графика: стек сегментов по проектам -->
+        <DataTemplate DataType="{x:Type models:HourStack}">
+            <Grid Margin="1,0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="170"/>
+                    <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <Canvas Grid.Row="0" Height="150" VerticalAlignment="Bottom" Background="Transparent">
-                    <Rectangle Fill="LightGray" Width="24" Canvas.Bottom="0"
-                               Height="{Binding IdleMinutes, Converter={StaticResource MinutesToHeight}}"/>
-                    <Rectangle Fill="ForestGreen" Width="24"
-                               Canvas.Bottom="{Binding IdleMinutes, Converter={StaticResource MinutesToHeight}}"
-                               Height="{Binding WorkMinutes, Converter={StaticResource MinutesToHeight}}"/>
-                </Canvas>
+                <Border Grid.Row="0" VerticalAlignment="Bottom">
+                    <ItemsControl ItemsSource="{Binding Segments}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel VerticalAlignment="Bottom"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Rectangle Fill="{Binding ColorHex}" ToolTip="{Binding ToolTipText}"
+                                           Margin="2,0" Height="{Binding Height}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
 
                 <TextBlock Grid.Row="1" Text="{Binding HourLabel}" HorizontalAlignment="Center" FontSize="8" Margin="0,2,0,0"/>
             </Grid>
@@ -34,73 +45,201 @@
         </DataTemplate>
     </Window.Resources>
 
+    <TabControl x:Name="MainTabControl">
+        <TabItem Header="Статистика">
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="220"/>
+            <RowDefinition Height="230"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="220"/>
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" FontSize="24" FontWeight="Bold" Text="{Binding CurrentTimeText}" Margin="0,0,0,15"/>
-
-        <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <TextBlock Text="Отслеживаемое время: " FontSize="16" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding TrackedTimeText}" FontSize="16" FontWeight="Bold" Foreground="DarkGreen" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding LastSavedText}" FontSize="12" Foreground="Gray" VerticalAlignment="Center" Margin="10,0,0,0"/>
+        <!-- Заголовок: время и статус -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding CurrentTimeText}"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Статус: " FontSize="12" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="DarkBlue" VerticalAlignment="Center"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,15">
-            <TextBlock Text="Статус: " FontSize="12" VerticalAlignment="Center"/>
-            <TextBlock Text="{Binding StatusText}" FontSize="12" Foreground="DarkBlue" VerticalAlignment="Center"/>
+        <!-- Панель инструментов -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button Content="Проекты и правила" Command="{Binding OpenProjectsCommand}" Padding="15,6" Margin="0,0,15,0"/>
+            <RadioButton Content="По проектам" GroupName="ChartMode" IsChecked="{Binding IsProjectsMode, Mode=TwoWay}"
+                         VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <RadioButton Content="Хронология" GroupName="ChartMode" IsChecked="{Binding IsTimelineMode, Mode=TwoWay}"
+                         VerticalAlignment="Center" Margin="0,0,20,0"/>
+            <TextBlock Text="Простой через:" FontSize="12" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox Text="{Binding InactivityTimeoutMinutes, UpdateSourceTrigger=PropertyChanged}"
+                     Width="40" TextAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBlock Text="мин" FontSize="12" VerticalAlignment="Center" Margin="5,0,5,0"/>
+            <TextBox Text="{Binding InactivityTimeoutSeconds, UpdateSourceTrigger=PropertyChanged}"
+                     Width="40" TextAlignment="Center" VerticalContentAlignment="Center"/>
+            <TextBlock Text="сек" FontSize="12" VerticalAlignment="Center" Margin="5,0,0,0"/>
         </StackPanel>
 
-        <StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal" Margin="0,0,0,10">
-            <Button Content="{Binding SetWindowButtonText}" Command="{Binding SetWindowCommand}" Padding="15,6" Margin="0,0,10,0"/>
-            <Button Content="Сбросить время" Command="{Binding ResetCommand}" Padding="15,6"/>
-        </StackPanel>
-
-        <GroupBox Grid.Row="4" Grid.Column="0" Header="{Binding SelectedDayHeaderText}">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                <ItemsControl ItemsSource="{Binding SelectedDayHourlyStats}">
+        <!-- График дня: два режима -->
+        <GroupBox Grid.Row="2" Header="{Binding SelectedDayHeaderText}">
+            <Grid>
+                <!-- Режим «По проектам»: почасовой стек, 24 столбца во всю ширину и высоту -->
+                <ItemsControl x:Name="ProjectsChart" ItemsSource="{Binding HourStacks}"
+                              Visibility="{Binding IsProjectsMode, Converter={StaticResource BoolToVisibility}}"
+                              SizeChanged="ProjectsChart_SizeChanged">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
+                            <UniformGrid Columns="24"/>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>
                 </ItemsControl>
-            </ScrollViewer>
-        </GroupBox>
 
-        <GroupBox Grid.Row="5" Grid.Column="0" Header="Журнал действий" Margin="0,10,0,0">
-            <ListView ItemsSource="{Binding Actions}">
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn Header="Время" DisplayMemberBinding="{Binding TimeFormatted}" Width="120"/>
-                        <GridViewColumn Header="Интервал с пред." DisplayMemberBinding="{Binding IntervalText}" Width="120"/>
-                        <GridViewColumn Header="Засчитано" DisplayMemberBinding="{Binding IsCounted}" Width="80"/>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </GroupBox>
-
-        <GroupBox Grid.Row="0" Grid.Column="1" Grid.RowSpan="6" Header="История по дням" Margin="15,0,0,0">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <Button Grid.Row="0" Content="Сегодня" Command="{Binding ShowTodayCommand}" Padding="10,5" Margin="0,0,0,10"/>
-
-                <ListBox Grid.Row="1" ItemsSource="{Binding AvailableDays}" SelectedItem="{Binding SelectedDay}"/>
+                <!-- Режим «Хронология»: таймлайн 00:00–24:00, во всю ширину + зум и скролл -->
+                <Grid Visibility="{Binding IsTimelineMode, Converter={StaticResource BoolToVisibility}}">
+                    <StackPanel VerticalAlignment="Center">
+                        <ScrollViewer x:Name="TimelineScrollViewer"
+                                      HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                                      SizeChanged="TimelineScrollViewer_SizeChanged">
+                            <StackPanel>
+                                <Border BorderBrush="LightGray" BorderThickness="1" Height="40"
+                                        Width="{Binding TimelineCanvasWidth}" HorizontalAlignment="Left">
+                                    <ItemsControl ItemsSource="{Binding TimelineSegments}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <Canvas Width="{Binding TimelineCanvasWidth}" Height="38"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemContainerStyle>
+                                            <Style>
+                                                <Setter Property="Canvas.Left" Value="{Binding Left}"/>
+                                            </Style>
+                                        </ItemsControl.ItemContainerStyle>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Rectangle Width="{Binding Width}" Height="38"
+                                                           Fill="{Binding ColorHex}" Opacity="{Binding Opacity}"
+                                                           MouseEnter="TimelineSegment_MouseEnter"
+                                                           MouseLeave="TimelineSegment_MouseLeave">
+                                                    <Rectangle.ToolTip>
+                                                        <ToolTip>
+                                                            <StackPanel>
+                                                                <TextBlock Text="{Binding ProjectName}" FontSize="13"
+                                                                           FontWeight="Bold" Margin="0,0,0,4"/>
+                                                                <TextBlock Text="{Binding ToolTipText}" FontSize="12"/>
+                                                            </StackPanel>
+                                                        </ToolTip>
+                                                    </Rectangle.ToolTip>
+                                                </Rectangle>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Border>
+                                <Grid Width="{Binding TimelineCanvasWidth}" Margin="0,4,0,0" HorizontalAlignment="Left">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="00:00" FontSize="10" HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="1" Text="06:00" FontSize="10" HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="2" Text="12:00" FontSize="10" HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="3" Text="18:00" FontSize="10" HorizontalAlignment="Left"/>
+                                    <TextBlock Grid.Column="3" Text="24:00" FontSize="10" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </StackPanel>
+                        </ScrollViewer>
+                        <!-- Проект сегмента под курсором: вне скролла, не уезжает при зуме -->
+                        <TextBlock Text="{Binding HoveredTimelineText}" FontSize="11" FontWeight="SemiBold"
+                                   Height="16" Margin="2,6,0,0"/>
+                    </StackPanel>
+                    <!-- Кнопки масштаба поверх таймлайна -->
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0">
+                        <Button Content="−" Command="{Binding TimelineZoomOutCommand}" ToolTip="Уменьшить масштаб"
+                                Width="26" Height="22" Padding="0" Margin="0,0,4,0"/>
+                        <Button Content="+" Command="{Binding TimelineZoomInCommand}" ToolTip="Приблизить масштаб"
+                                Width="26" Height="22" Padding="0"/>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </GroupBox>
+
+        <!-- Нижняя часть: дни, неразобранное, статистика по проектам -->
+        <Grid Grid.Row="3" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="210"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="270"/>
+            </Grid.ColumnDefinitions>
+
+            <GroupBox Grid.Column="0" Header="Дни" Margin="0,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Button Grid.Row="0" Content="Сегодня" Command="{Binding ShowTodayCommand}" Padding="10,5" Margin="0,0,0,10"/>
+                    <ListBox Grid.Row="1" ItemsSource="{Binding AvailableDays}" SelectedItem="{Binding SelectedDay}"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Column="1" Header="Неразобранное" Margin="0,0,10,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <ListView Grid.Row="0" ItemsSource="{Binding Unclassified}" SelectedItem="{Binding SelectedUnclassified}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Время" DisplayMemberBinding="{Binding TimeText}" Width="90"/>
+                                <GridViewColumn Header="Длит." DisplayMemberBinding="{Binding DurationText}" Width="60"/>
+                                <GridViewColumn Header="Простой" DisplayMemberBinding="{Binding IdleMarker}" Width="70"/>
+                                <GridViewColumn Header="Процесс" DisplayMemberBinding="{Binding ProcessName}" Width="100"/>
+                                <GridViewColumn Header="Заголовок" DisplayMemberBinding="{Binding WindowTitle}" Width="220"/>
+                                <GridViewColumn Header="URL" DisplayMemberBinding="{Binding Url}" Width="180"/>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+
+                    <Border Grid.Row="1" BorderBrush="LightGray" BorderThickness="0,1,0,0" Margin="0,8,0,0" Padding="0,8,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
+                                <TextBlock Text="Проект:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <ComboBox ItemsSource="{Binding Projects}" SelectedItem="{Binding AssignProject}"
+                                          DisplayMemberPath="Name" Width="180" Margin="0,0,10,0"/>
+                                <Button Content="Назначить проект" Command="{Binding AssignCommand}" Padding="12,4"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <CheckBox Content="Создать правило:" IsChecked="{Binding CreateRule}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <ComboBox ItemsSource="{Binding RuleTypes}" SelectedItem="{Binding SelectedRuleType}"
+                                          DisplayMemberPath="Display" Width="180" Margin="0,0,5,0"/>
+                                <TextBox Text="{Binding RulePattern, UpdateSourceTrigger=PropertyChanged}" Width="220" Margin="0,0,5,0"/>
+                                <CheckBox Content="regex" IsChecked="{Binding RuleIsRegex}" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Grid.Column="2" Header="По проектам за день">
+                <ListBox ItemsSource="{Binding ProjectStats}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <Rectangle Width="12" Height="12" Fill="{Binding ColorHex}" Margin="0,0,6,0"/>
+                                <TextBlock Text="{Binding DisplayText}" FontSize="12" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </GroupBox>
+        </Grid>
     </Grid>
+        </TabItem>
+        <TabItem Header="Проекты и правила" x:Name="ProjectsTab">
+            <local:ProjectsView x:Name="ProjectsViewControl"/>
+        </TabItem>
+    </TabControl>
 </Window>

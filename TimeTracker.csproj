@@ -14,4 +14,13 @@
     </Content>
     <Compile Remove="tools\**\*.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.*" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.*" />
+    <!-- UI Automation для извлечения URL активной вкладки Edge
+         (COMReference на UIAutomationClient не поддерживается dotnet build) -->
+    <PackageReference Include="FlaUI.Core" Version="4.0.0" />
+    <PackageReference Include="FlaUI.UIA3" Version="4.0.0" />
+  </ItemGroup>
 </Project>
